@@ -22,6 +22,11 @@ public class IngestionStateManager {
                 return change(newStatus, statusAtual);
             }
 
+            if(newStatus.canChangeTo(statusAtual)){
+                return change(newStatus, statusAtual);
+            }
+
+            return false;
 
         } catch (Exception e) {
             throw new RuntimeException(e);
