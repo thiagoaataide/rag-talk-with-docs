@@ -19,12 +19,17 @@ public class IngestionStateManager {
             IngestionStatus statusAtual = this.statusRef.get();
 
             if (statusAtual.equals(IngestionStatus.NOT_READY) && newStatus.canChangeTo(statusAtual)) {
-                return this.statusRef.compareAndSet(statusAtual, newStatus);
-            } else {
-                return this.statusRef.compareAndSet(statusAtual, newStatus);
+                return change(newStatus, statusAtual);
             }
+
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+
+    }
+
+    private boolean change(IngestionStatus newStatus, IngestionStatus statusAtual) {
+        return this.statusRef.compareAndSet(statusAtual, newStatus);
     }
 }
