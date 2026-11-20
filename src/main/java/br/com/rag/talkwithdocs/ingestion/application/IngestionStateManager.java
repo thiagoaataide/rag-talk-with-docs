@@ -11,10 +11,10 @@ public class IngestionStateManager {
     private IngestionStateManager() {
     }
 
-    private final IngestionStatus status = IngestionStatus.NOT_READY;
+    private static final IngestionStatus status = IngestionStatus.NOT_READY;
 
-    public static AtomicReference<IngestionStateManager> GET_INSTANCE () {
-        return new AtomicReference<>(new IngestionStateManager());
+    public static AtomicReference<IngestionStatus> getStatus() {
+        return new AtomicReference<>(status);
     }
 
 }
