@@ -8,10 +8,18 @@ import java.util.concurrent.atomic.AtomicReference;
 @Component
 public class IngestionStateManager {
 
-    private static final IngestionStatus status = IngestionStatus.NOT_READY;
-    private static final AtomicReference<IngestionStatus> statusRef = new AtomicReference<>(status);
+    private final AtomicReference<IngestionStatus> statusRef = new AtomicReference<>(IngestionStatus.NOT_READY);
 
     public IngestionStatus getStatus() {
         return statusRef.get();
+    }
+
+    public IngestionStatus changeStatus(IngestionStatus newStatus){
+        try{
+            this.statusRef.compareAndSet(this.statusRef.get(), newStatus);
+            return this.statusRef.get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
