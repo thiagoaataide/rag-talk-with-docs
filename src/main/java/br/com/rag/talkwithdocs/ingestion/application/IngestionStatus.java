@@ -19,4 +19,9 @@ public enum IngestionStatus {
         return previousStatus.contains(status);
     }
 
+
+    public boolean canNotChangeTo(IngestionStatus newStatus) {
+        return !canChangeTo(newStatus);
+    }
+
 }
