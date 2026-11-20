@@ -14,12 +14,15 @@ public class IngestionStateManager {
         return statusRef.get();
     }
 
-    public IngestionStatus changeStatus(IngestionStatus newStatus){
-        try{
-            this.statusRef.compareAndSet(this.statusRef.get(), newStatus);
-            return this.statusRef.get();
+    public IngestionStatus changeStatus(IngestionStatus newStatus) {
+        try {
+            if (IngestionStatus.NOT_READY.canChangeTo(IngestionStatus.PROCESSING)) {
+                this.statusRef.compareAndSet(this.statusRef.get(), newStatus);
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+
+        return this.statusRef.get();
     }
 }
