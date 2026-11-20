@@ -14,17 +14,17 @@ public class IngestionStateManager {
         return statusRef.get();
     }
 
-    public IngestionStatus changeStatus(IngestionStatus newStatus) {
+    public Boolean changeStatus(IngestionStatus newStatus) {
         try {
-            if (this.statusRef.get().equals(IngestionStatus.NOT_READY) && newStatus.canChangeTo(this.statusRef.get())) {
-                this.statusRef.compareAndSet(this.statusRef.get(), newStatus);
-            } else if(newStatus.canChangeTo(this.statusRef.get())){
-                this.statusRef.compareAndSet(this.statusRef.get(), newStatus);
+            IngestionStatus statusAtual = this.statusRef.get();
+
+            if (statusAtual.equals(IngestionStatus.NOT_READY) && newStatus.canChangeTo(statusAtual)) {
+                return this.statusRef.compareAndSet(statusAtual, newStatus);
+            } else {
+                return this.statusRef.compareAndSet(statusAtual, newStatus);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
-        return this.statusRef.get();
     }
 }
