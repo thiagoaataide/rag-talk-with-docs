@@ -18,6 +18,8 @@ public class IngestionStateManager {
         try {
             if (this.statusRef.get().equals(IngestionStatus.NOT_READY) && newStatus.canChangeTo(this.statusRef.get())) {
                 this.statusRef.compareAndSet(this.statusRef.get(), newStatus);
+            } else if(newStatus.canChangeTo(this.statusRef.get())){
+                this.statusRef.compareAndSet(this.statusRef.get(), newStatus);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
