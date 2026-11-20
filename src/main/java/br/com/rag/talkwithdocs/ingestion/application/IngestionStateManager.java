@@ -15,23 +15,18 @@ public class IngestionStateManager {
     }
 
     public Boolean changeStatus(IngestionStatus newStatus) {
-        try {
-            IngestionStatus statusAtual = this.statusRef.get();
 
-            if (statusAtual.equals(IngestionStatus.NOT_READY) && newStatus.canChangeTo(statusAtual)) {
-                return change(newStatus, statusAtual);
-            }
+        IngestionStatus statusAtual = this.statusRef.get();
 
-            if(newStatus.canChangeTo(statusAtual)){
-                return change(newStatus, statusAtual);
-            }
-
-            return false;
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        if (statusAtual.equals(IngestionStatus.NOT_READY) && newStatus.canChangeTo(statusAtual)) {
+            return change(newStatus, statusAtual);
         }
 
+        if (newStatus.canChangeTo(statusAtual)) {
+            return change(newStatus, statusAtual);
+        }
+
+        return false;
     }
 
     private boolean change(IngestionStatus newStatus, IngestionStatus statusAtual) {
