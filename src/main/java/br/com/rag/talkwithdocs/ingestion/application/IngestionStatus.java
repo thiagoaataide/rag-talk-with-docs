@@ -1,6 +1,6 @@
 package br.com.rag.talkwithdocs.ingestion.application;
 
-public enum IngestrionStatus {
+public enum IngestionStatus {
     NOT_READY,
     PROCESSING,
     READY,
