@@ -16,7 +16,7 @@ public class IngestionStateManager {
 
     public IngestionStatus changeStatus(IngestionStatus newStatus) {
         try {
-            if (this.statusRef.get().equals(IngestionStatus.NOT_READY) && IngestionStatus.PROCESSING.canChangeTo(this.statusRef.get())) {
+            if (this.statusRef.get().equals(IngestionStatus.NOT_READY) && newStatus.canChangeTo(this.statusRef.get())) {
                 this.statusRef.compareAndSet(this.statusRef.get(), newStatus);
             }
         } catch (Exception e) {
