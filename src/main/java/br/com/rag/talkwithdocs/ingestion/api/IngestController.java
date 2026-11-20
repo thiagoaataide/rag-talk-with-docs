@@ -19,6 +19,8 @@ public class IngestController {
     @PostMapping("/ingest")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<IngestionResponse> ingesting() {
+        IngestionResponse ingest = this.documentIngestionService.ingest();
 
+        return ResponseEntity.status(HttpStatus.OK).body(ingest);
     }
 }
