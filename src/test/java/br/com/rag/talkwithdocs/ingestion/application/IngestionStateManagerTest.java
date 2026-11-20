@@ -4,9 +4,7 @@ package br.com.rag.talkwithdocs.ingestion.application;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
 class IngestionStateManagerTest {
 
 
@@ -33,6 +31,7 @@ class IngestionStateManagerTest {
         Assertions.assertThat(statusAtual).isEqualTo(IngestionStatus.NOT_READY);
         Boolean statusChanged = ingestionStateManager.changeStatus(IngestionStatus.READY);
         Assertions.assertThat(statusChanged).isFalse();
+        Assertions.assertThat(ingestionStateManager.getStatus()).isEqualTo(IngestionStatus.NOT_READY);
     }
 
     @Test
@@ -41,6 +40,7 @@ class IngestionStateManagerTest {
         Assertions.assertThat(statusAtual).isEqualTo(IngestionStatus.NOT_READY);
         Boolean statusChanged = ingestionStateManager.changeStatus(IngestionStatus.FAILED);
         Assertions.assertThat(statusChanged).isFalse();
+        Assertions.assertThat(ingestionStateManager.getStatus()).isEqualTo(IngestionStatus.NOT_READY);
     }
 
     @Test
@@ -73,6 +73,7 @@ class IngestionStateManagerTest {
         Assertions.assertThat(statusChanged).isTrue();
         Boolean isChangedTodReady = ingestionStateManager.changeStatus(IngestionStatus.NOT_READY);
         Assertions.assertThat(isChangedTodReady).isFalse();
+        Assertions.assertThat(ingestionStateManager.getStatus()).isEqualTo(IngestionStatus.PROCESSING);
     }
 
 }
