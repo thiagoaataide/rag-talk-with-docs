@@ -6,10 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 class IngestionStateManagerTest {
 
@@ -103,15 +100,12 @@ class IngestionStateManagerTest {
         );
 
         try {
-            List<Boolean> results = List.of(threadSubmmited1.get(), threadSubmmited2.get());
+            List<Boolean> results = List.of(threadSubmmited1.get(3, TimeUnit.SECONDS), threadSubmmited2.get(3, TimeUnit.SECONDS));
 
             Assertions.assertThat(results).containsExactlyInAnyOrder(true, false);
-            Assertions.assertThat(results).hasSize(2);
             Assertions.assertThat(ingestionStateManager.getStatus()).isEqualTo(IngestionStatus.PROCESSING);
 
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
+        } catch (ExecutionException | InterruptedException | TimeoutException e) {
             throw new RuntimeException(e);
         } finally {
             if (!es.isShutdown()) {
