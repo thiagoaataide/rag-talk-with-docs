@@ -5,6 +5,12 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
 class IngestionStateManagerTest {
 
 
@@ -12,12 +18,12 @@ class IngestionStateManagerTest {
 
 
     @BeforeEach
-    void setup(){
+    void setup() {
         this.ingestionStateManager = new IngestionStateManager();
     }
 
     @Test
-    void given_notReadyStatus_canChangeToProcessing(){
+    void given_notReadyStatus_canChangeToProcessing() {
         IngestionStatus statusAtual = ingestionStateManager.getStatus();
         Assertions.assertThat(statusAtual).isEqualTo(IngestionStatus.NOT_READY);
         Boolean statusChanged = ingestionStateManager.changeStatus(IngestionStatus.PROCESSING);
@@ -26,7 +32,7 @@ class IngestionStateManagerTest {
     }
 
     @Test
-    void given_notReadyStatus_canNotChangeToReady(){
+    void given_notReadyStatus_canNotChangeToReady() {
         IngestionStatus statusAtual = ingestionStateManager.getStatus();
         Assertions.assertThat(statusAtual).isEqualTo(IngestionStatus.NOT_READY);
         Boolean statusChanged = ingestionStateManager.changeStatus(IngestionStatus.READY);
@@ -35,7 +41,7 @@ class IngestionStateManagerTest {
     }
 
     @Test
-    void given_notReadyStatus_canNotChangeToFaield(){
+    void given_notReadyStatus_canNotChangeToFaield() {
         IngestionStatus statusAtual = ingestionStateManager.getStatus();
         Assertions.assertThat(statusAtual).isEqualTo(IngestionStatus.NOT_READY);
         Boolean statusChanged = ingestionStateManager.changeStatus(IngestionStatus.FAILED);
@@ -44,7 +50,7 @@ class IngestionStateManagerTest {
     }
 
     @Test
-    void given_processingStatus_canChangeToReady(){
+    void given_processingStatus_canChangeToReady() {
         IngestionStatus statusAtual = ingestionStateManager.getStatus();
         Assertions.assertThat(statusAtual).isEqualTo(IngestionStatus.NOT_READY);
         Boolean statusChanged = ingestionStateManager.changeStatus(IngestionStatus.PROCESSING);
@@ -55,7 +61,7 @@ class IngestionStateManagerTest {
     }
 
     @Test
-    void given_processingStatus_canChangeToFailed(){
+    void given_processingStatus_canChangeToFailed() {
         IngestionStatus statusAtual = ingestionStateManager.getStatus();
         Assertions.assertThat(statusAtual).isEqualTo(IngestionStatus.NOT_READY);
         Boolean statusChanged = ingestionStateManager.changeStatus(IngestionStatus.PROCESSING);
@@ -66,7 +72,7 @@ class IngestionStateManagerTest {
     }
 
     @Test
-    void given_processingStatus_canNotChangeToNotReady(){
+    void given_processingStatus_canNotChangeToNotReady() {
         IngestionStatus statusAtual = ingestionStateManager.getStatus();
         Assertions.assertThat(statusAtual).isEqualTo(IngestionStatus.NOT_READY);
         Boolean statusChanged = ingestionStateManager.changeStatus(IngestionStatus.PROCESSING);
@@ -74,6 +80,45 @@ class IngestionStateManagerTest {
         Boolean isChangedTodReady = ingestionStateManager.changeStatus(IngestionStatus.NOT_READY);
         Assertions.assertThat(isChangedTodReady).isFalse();
         Assertions.assertThat(ingestionStateManager.getStatus()).isEqualTo(IngestionStatus.PROCESSING);
+    }
+
+    @Test
+    void shouldRunTwoThreads() {
+        ExecutorService es = Executors.newFixedThreadPool(2);
+        Future<Boolean> threadSubmmited1 = es.submit(() -> {
+                    System.out.println("Thread 1 {}: " + ingestionStateManager.getStatus());
+                    Boolean isStatusAlterado = ingestionStateManager.changeStatus(IngestionStatus.PROCESSING);
+                    System.out.println("Thread 1 {}: " + ingestionStateManager.getStatus() + " Status: " + isStatusAlterado);
+                    return isStatusAlterado;
+                }
+
+        );
+
+        Future<Boolean> threadSubmmited2 = es.submit(() -> {
+                    System.out.println("Thread 2 {}: " + ingestionStateManager.getStatus());
+                    Boolean isStatusAlterado = ingestionStateManager.changeStatus(IngestionStatus.PROCESSING);
+                    System.out.println("Thread 2 {}: " + ingestionStateManager.getStatus() + " Status: " + isStatusAlterado);
+                    return isStatusAlterado;
+                }
+        );
+
+        try {
+            List<Boolean> results = List.of(threadSubmmited1.get(), threadSubmmited2.get());
+
+            Assertions.assertThat(results).containsExactlyInAnyOrder(true, false);
+            Assertions.assertThat(results).hasSize(2);
+            Assertions.assertThat(ingestionStateManager.getStatus()).isEqualTo(IngestionStatus.PROCESSING);
+
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (!es.isShutdown()) {
+                es.shutdown();
+            }
+        }
+
     }
 
 }
