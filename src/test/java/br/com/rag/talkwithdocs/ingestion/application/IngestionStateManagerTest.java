@@ -81,8 +81,13 @@ class IngestionStateManagerTest {
 
     @Test
     void shouldRunTwoThreads() {
+        boolean testeExecutados = false;
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch readyLatch = new CountDownLatch(2);
         ExecutorService es = Executors.newFixedThreadPool(2);
         Future<Boolean> threadSubmmited1 = es.submit(() -> {
+                    readyLatch.countDown();
+                    startLatch.await();
                     System.out.println("Thread 1 {}: " + ingestionStateManager.getStatus());
                     Boolean isStatusAlterado = ingestionStateManager.changeStatus(IngestionStatus.PROCESSING);
                     System.out.println("Thread 1 {}: " + ingestionStateManager.getStatus() + " Status: " + isStatusAlterado);
@@ -92,6 +97,8 @@ class IngestionStateManagerTest {
         );
 
         Future<Boolean> threadSubmmited2 = es.submit(() -> {
+                    readyLatch.countDown();
+                    startLatch.await();
                     System.out.println("Thread 2 {}: " + ingestionStateManager.getStatus());
                     Boolean isStatusAlterado = ingestionStateManager.changeStatus(IngestionStatus.PROCESSING);
                     System.out.println("Thread 2 {}: " + ingestionStateManager.getStatus() + " Status: " + isStatusAlterado);
@@ -99,17 +106,34 @@ class IngestionStateManagerTest {
                 }
         );
 
-        try {
-            List<Boolean> results = List.of(threadSubmmited1.get(3, TimeUnit.SECONDS), threadSubmmited2.get(3, TimeUnit.SECONDS));
 
-            Assertions.assertThat(results).containsExactlyInAnyOrder(true, false);
+        try {
+            if (readyLatch.await(3, TimeUnit.SECONDS)) {
+                startLatch.countDown();
+            } else {
+                throw new TimeoutException("Timeout waiting for readyLatch");
+            }
+
+
+            List<Boolean> results = List.of(threadSubmmited1.get(8, TimeUnit.SECONDS), threadSubmmited2.get(8, TimeUnit.SECONDS));
+
+            Assertions.assertThat(results).containsExactlyInAnyOrder(false, true);
             Assertions.assertThat(ingestionStateManager.getStatus()).isEqualTo(IngestionStatus.PROCESSING);
 
-        } catch (ExecutionException | InterruptedException | TimeoutException e) {
+            testeExecutados = true;
+
+        } catch (ExecutionException | TimeoutException e) {
             throw new RuntimeException(e);
-        } finally {
-            if (!es.isShutdown()) {
+        } catch (InterruptedException e){
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        }
+        finally {
+
+            if (testeExecutados) {
                 es.shutdown();
+            } else {
+                es.shutdownNow();
             }
         }
 
